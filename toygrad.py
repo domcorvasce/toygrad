@@ -18,7 +18,6 @@ class dual:
         """
         self.real = real
         self.grad = grad
-        self.var = var
 
         if grad is None:
             self.grad = 1.0 if var else 0.0
@@ -42,12 +41,9 @@ class dual:
     def __pow__(self, other: float):
         return dual(self.real ** other, other * self.real ** (other - 1))
 
-    def __repr__(self) -> str:
-        return "{}".format(self.real)
-
-
-def grad(fn, point: dual):
-    return fn(point).grad
+# TODO: Add partial differentiation
+def grad(fn, x: dual):
+    return fn(x).grad
 
 
 assert grad(lambda x: x + dual(3.0), dual(3.0, var=True)) == 1
