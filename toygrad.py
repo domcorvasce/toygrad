@@ -1,5 +1,6 @@
 from inspect import getfullargspec
 from typing import SupportsFloat
+from math import floor
 
 
 class dual:
@@ -49,13 +50,16 @@ class dual:
             self.real * rval.real, (rval.real * self.grad) + (self.real * rval.grad)
         )
 
-    def __div__(self, other: SupportsFloat) -> "dual":
+    def __truediv__(self, other: SupportsFloat) -> "dual":
         rval = self.__get_rval(other)
         return dual(
             self.real / rval.real,
             (1 / (rval.real ** 2))
             * ((rval.real * self.grad) - (self.real * rval.grad)),
         )
+
+    def __floordiv__(self, other: SupportsFloat) -> "dual":
+        return floor(self.__truediv__(self, other))
 
     def __pow__(self, other: SupportsFloat) -> "dual":
         rval = self.__get_rval(other)
@@ -91,7 +95,7 @@ def grad(fn, **args):
         # Compute the partial derivative
         gradient[arg] = fn(**variables).grad
         # Reset the variable value to the constant 0
-        variables[arg] = dual(0)
+        variables[arg] = dual(0.000000001)
     return gradient
 
 
