@@ -1,3 +1,4 @@
+from inspect import getfullargspec
 from typing import SupportsFloat
 
 
@@ -6,7 +7,9 @@ class dual:
     See https://en.wikipedia.org/wiki/Dual_number.
     """
 
-    def __init__(self, real: SupportsFloat, grad: SupportsFloat = None, var=False):
+    def __init__(
+        self, real: SupportsFloat, grad: SupportsFloat = None, var: bool = False
+    ):
         """Returns a new dual number.
 
         Args:
@@ -20,32 +23,76 @@ class dual:
         self.grad = grad
 
         if grad is None:
-            self.grad = 1.0 if var else 0.0
+            self.grad = 1.0 if var is True else 0.0
 
-    def __add__(self, other):
-        return dual(self.real + other.real, self.grad + other.grad)
+    def __get_rval(self, other: SupportsFloat) -> "dual":
+        """Returns a dual number from the right value of the operation.
 
-    def __sub__(self, other):
-        return dual(self.real - other.real, self.grad - other.grad)
+        Args:
+            other: The right value of the operation.
+        Returns:
+            A dual number.
+        """
+        return other if hasattr(other, "grad") else dual(other)
 
-    def __mul__(self, other):
-        derivative = other.real * self.grad + self.real * other.grad
-        return dual(self.real * other.real, derivative)
+    def __add__(self, other: SupportsFloat) -> "dual":
+        rval = self.__get_rval(other)
+        return dual(self.real + rval.real, self.grad + rval.grad)
 
-    def __div__(self, other):
-        derivative = (1 / (other.real ** 2)) * (
-            other.real * self.grad - self.real * other.grad
+    def __sub__(self, other: SupportsFloat) -> "dual":
+        rval = self.__get_rval(other)
+        return dual(self.real - rval.real, self.grad - rval.grad)
+
+    def __mul__(self, other: SupportsFloat) -> "dual":
+        rval = self.__get_rval(other)
+        return dual(
+            self.real * rval.real, (rval.real * self.grad) + (self.real * rval.grad)
         )
-        return dual(self.real / other, derivative)
 
-    def __pow__(self, other: float):
-        return dual(self.real ** other, other * self.real ** (other - 1))
+    def __div__(self, other: SupportsFloat) -> "dual":
+        rval = self.__get_rval(other)
+        return dual(
+            self.real / rval.real,
+            (1 / (rval.real ** 2))
+            * ((rval.real * self.grad) - (self.real * rval.grad)),
+        )
 
-# TODO: Add partial differentiation
-def grad(fn, x: dual):
-    return fn(x).grad
+    def __pow__(self, other: SupportsFloat) -> "dual":
+        rval = self.__get_rval(other)
+
+        # Handle the special case of e^x
+        if self.real == exp.real:
+            return dual(self.real ** rval.real, self.real ** rval.real)
+
+        return dual(
+            self.real ** rval.real,
+            rval.real * (self.real ** (rval.real - 1.0) * self.grad),
+        )
+
+    def __float__(self) -> float:
+        return self.real
 
 
-assert grad(lambda x: x + dual(3.0), dual(3.0, var=True)) == 1
-assert grad(lambda x: x ** 2, dual(3.0, var=True)) == 6.0
-assert grad(lambda x: (x ** 2.0) * x, dual(3.0, var=True)) == 27.0
+def grad(fn, **args):
+    """Returns the gradient of a function.
+
+    Args:
+        fn: The function that must be differentiated.
+        args: The arguments to be passed to the function.
+    Returns:
+        The gradient of the function.
+    """
+    gradient = {}
+    variables = dict.fromkeys(getfullargspec(fn).args, dual(0))
+
+    for arg in args.keys():
+        # Treat the variable as such, in order to avoid it being treated as a constant and its derivative being 0.
+        variables[arg] = dual(args[arg], var=True)
+        # Compute the partial derivative
+        gradient[arg] = fn(**variables).grad
+        # Reset the variable value to the constant 0
+        variables[arg] = dual(0)
+    return gradient
+
+
+exp = dual(2.718281828459045)
