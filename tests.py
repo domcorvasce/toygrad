@@ -16,7 +16,8 @@ assert grad(lambda x, y: (x * x * 3 + y * y * y) * 2, x=1.0, y=2.0) == {
 }
 assert grad(lambda x, y: x ** 2 + y ** 2, x=3.0, y=4.0) == {"x": 6.0, "y": 8.0}
 
-# This test fails. I'm going to address it in a future commit.
-# assert grad(lambda x, y: (x ** 2) / (y ** 2), x=2.0, y=3.0) == { 'x': 4.0 / 9.0, 'y': 8.0 / 27.0 }
+# The library fails at differentiating this function.
+# I'm going to address it in a future commit.
+# assert grad(lambda x, y: (x ** 2) / (y ** 2), x=2.0, y=3.0)
 
 print("All assertions passed! ✨ 🍰 ✨")

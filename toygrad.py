@@ -95,7 +95,7 @@ def grad(fn, **args):
         # Compute the partial derivative
         gradient[arg] = fn(**variables).grad
         # Reset the variable value to the constant 0
-        variables[arg] = dual(0.000000001)
+        variables[arg] = dual(0)
     return gradient
 
 
