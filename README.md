@@ -7,8 +7,8 @@ A toy forward-mode autodiff utility written in Python.
 ```python
 from toygrad import grad, dual, exp
 
-def f(x, y, z):
-    return (x + y + z) * (exp ** (x * y * z))
+def f(x, y):
+    return (x * x * 3 + y * y * y) * 2
 
-print(grad(f, x=1.0, y=2.0, z=3.0)) #=> {'x': 2.0, 'y': 3.0, 'z': 4.0}
+print(grad(f, x=1.0, y=2.0)) #=> {'x': 12.0, 'y': 24.0}
 ```
