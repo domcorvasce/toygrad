@@ -1,5 +1,6 @@
 from typing import Callable, SupportsFloat
 from inspect import getfullargspec
+from toygrad import dual, var
 
 
 def gradient(of: Callable, wrt: str = None, at: any = []) -> SupportsFloat:
@@ -30,4 +31,15 @@ def gradient(of: Callable, wrt: str = None, at: any = []) -> SupportsFloat:
     if wrt is not None and wrt not in func_args:
         raise ValueError(f"'{wrt}' is not a valid argument name")
 
-    return of(*at)
+    # Find the index of the value for the variable with respect to which
+    # we must find the partial derivative of the function.
+    target_variable_index = func_args.index(wrt)
+    processed_args = []
+
+    for index, arg in enumerate(at):
+        is_wrt = index == target_variable_index
+        # Treat the argument as a variable if it matches the wrt argument.
+        # Otherwise, treat it as a constant.
+        processed_args.append(var(arg) if is_wrt else dual(arg))
+
+    return of(*processed_args).grad
