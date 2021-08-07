@@ -70,7 +70,7 @@ class dual:
             A dual number.
         """
         exp = self.to_dual(exp)
-        # The `self.grad` multiplied in order to compute the chain rule
+        # The `self.grad` factor is there to satisfy the chain rule
         derivative = (exp.real * (self.real ** (exp.real - 1))) * self.grad
         return dual(self.real ** exp.real, derivative.real)
 

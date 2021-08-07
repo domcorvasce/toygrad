@@ -21,25 +21,25 @@ def gradient(of: Callable, wrt: str = None, at: any = []) -> SupportsFloat:
     if len(func_args) == 0:
         return 0.0
 
-    # Check that the user specified the variable of which the derivative must be computed.
+    # Check that the user specified with respect to which variable to take the derivative
+    # when working with multi-variable functions.
     if is_multivariate and wrt is None:
         raise ValueError("wrt must be provided for multivariate functions")
     else:
-        # Set default value for the wrt argument if necessary
+        # Use the first argument when working with single-variable functions
         wrt = func_args[0] if wrt is None else wrt
 
+    # Ensure that `wrt` matches the name of a valid argument for the function
     if wrt is not None and wrt not in func_args:
         raise ValueError(f"'{wrt}' is not a valid argument name")
 
-    # Find the index of the value for the variable with respect to which
-    # we must find the partial derivative of the function.
+    # Find the index of the variable with respect to which the derivative is to be taken
     target_variable_index = func_args.index(wrt)
     processed_args = []
 
     for index, arg in enumerate(at):
+        # Treat all arguments, except the target variable's, as constants
         is_wrt = index == target_variable_index
-        # Treat the argument as a variable if it matches the wrt argument.
-        # Otherwise, treat it as a constant.
         processed_args.append(var(arg) if is_wrt else dual(arg))
 
     return of(*processed_args).grad
